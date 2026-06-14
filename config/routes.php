@@ -15,6 +15,15 @@
 
 /** @var \Core\Router $router */
 
+//----------- AUTHENTICATION -------------
+
+// Register
+$router->add('POST', '/auth/register', 'AuthController@register');
+
+
+
+
+
 $router->add('GET', '/users', 'UserController@index');
 $router->add('POST', '/users', 'UserController@store');
 $router->add('GET', '/users/(\d+)', 'UserController@show');
