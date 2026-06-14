@@ -7,8 +7,13 @@ use App\Models\User;
 
 class AuthController
 {
+    private User $userModel;
+    public function __construct()
+    {
+        $this->userModel = new User();
+    }
     /**
-     * Dang ky user moi.
+     * DANG KY USER MOI.
      *
      * Input JSON:
      * - username: string
@@ -27,10 +32,10 @@ class AuthController
 
     // register(): Đọc json chuyển sang array -> validate -> xử lý dữ liệu (hashpass) -> tạo dữ liệu thông qua model
     public function register(): void
-    {   
+    {
         // Doc JSON body tu request va chuyen thanh mang PHP.
         $data = json_decode(file_get_contents('php://input'), true);
-        
+
         // Neu body khong phai JSON hop le thi tra ve loi 400 Bad Request.
         if (!is_array($data)) {
             ResponseHelper::error('Invalid JSON body', 400);
@@ -60,11 +65,10 @@ class AuthController
             return;
         }
 
-        // Model User chiu trach nhiem thao tac voi bang users.
-        $userModel = new User();
+        
 
         // Kiem tra email da ton tai chua de tranh trung user.
-        if ($userModel->findByEmail($email) !== null) {
+        if ($this->userModel->findByEmail($email) !== null) {
             ResponseHelper::error('Email already exists', 409);
             return;
         }
@@ -73,11 +77,75 @@ class AuthController
         $passwordHash = password_hash($password, PASSWORD_DEFAULT);
 
         // Tao user moi thong qua model, controller khong viet SQL truc tiep.
-        $user = $userModel->create($username, $email, $passwordHash);
+        $user = $this->userModel->create($username, $email, $passwordHash);
 
         // Tra ve thong tin public cua user, khong tra password_hash.
         ResponseHelper::success([
             'user' => $user,
         ], 'User registered successfully', 201);
+    }
+
+
+
+    /**
+     * DANG NHAP USER.
+     *
+     * Input JSON:
+     * - email: string
+     * - password: string
+     *
+     * Output success:
+     * - HTTP 200
+     * - data.user gom id, username, email
+     *
+     * Output error:
+     * - HTTP 400 neu body khong phai JSON hop le
+     * - HTTP 422 neu thieu email/password hoac email sai dinh dang
+     * - HTTP 401 neu email hoac password khong dung
+     */
+    public function login(): void
+    {
+        // Doc JSON body tu request va chuyen thanh mang PHP.
+        $data = json_decode(file_get_contents('php://input'), true);
+
+        // Neu body khong phai JSON hop le thi tra ve loi 400 Bad Request.
+        if (!is_array($data)) {
+            ResponseHelper::error('Invalid JSON body', 400);
+            return;
+        }
+
+        // Lay email va password tu request.
+        $email = trim($data['email'] ?? '');
+        $password = $data['password'] ?? '';
+
+        // Validate cac field bat buoc.
+        if ($email === '' || $password === '') {
+            ResponseHelper::error('Email and password are required', 422);
+            return;
+        }
+
+        // Kiem tra email dung dinh dang.
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            ResponseHelper::error('Invalid email', 422);
+            return;
+        }
+
+        // lay user tu email
+        $user = $this->userModel->findByEmail($email);
+
+        // Khong noi ro email sai hay password sai de tranh lo thong tin user ton tai.
+        if ($user === null || !password_verify($password, $user['password_hash'])) {
+            ResponseHelper::error('Invalid credentials', 401);
+            return;
+        }
+
+        // Tra ve thong tin public, khong tra password_hash.
+        ResponseHelper::success([
+            'user' => [
+                'id' => $user['id'],
+                'username' => $user['username'],
+                'email' => $user['email'],
+            ],
+        ], 'Login successfully');
     }
 }

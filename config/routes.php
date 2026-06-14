@@ -19,7 +19,8 @@
 
 // Register
 $router->add('POST', '/auth/register', 'AuthController@register');
-
+//login
+$router->add('POST', '/auth/login', 'AuthController@login');
 
 
 
