@@ -1,0 +1,11 @@
+{
+    "name": "lptuan08/codenotes",
+    "description": "CodeNotes RESTful API",
+    "type": "project",
+    "autoload": {
+        "psr-4": {
+            "App\\": "app/",
+            "Core\\": "core/"
+        }
+    }
+}
