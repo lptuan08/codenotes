@@ -7,9 +7,16 @@ require_once __DIR__ . '/../vendor/autoload.php';
 
 use Core\Router;
 
+$dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/..');
+$dotenv->load();
+
+header('Content-Type: application/json');
+
 $router = new Router();
 require_once __DIR__ . '/../config/routes.php';
 
+
+$isDebug = ($_ENV['APP_DEBUG'] ?? 'false') === 'true';
 try {
     // Dispatch the current HTTP request to the router.
     // parse_url() extracts only the path portion of the requested URL.
@@ -21,7 +28,15 @@ try {
     // Fallback global error handler for unexpected exceptions.
     http_response_code(500);
 
-    echo json_encode([
-        'error' => 'Internal Server Error'
-    ]);
+    $response = [
+        'error' => 'Internal Server Error',
+    ];
+
+    if ($isDebug) {
+        $response['message'] = $e->getMessage();
+        $response['file'] = $e->getFile();
+        $response['line'] = $e->getLine();
+        $response['trace'] = $e->getTrace();
+    }
+    echo json_encode($response);
 }
