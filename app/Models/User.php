@@ -41,6 +41,7 @@ class User
      * Output:
      * - array thong tin public cua user vua tao
      * - khong tra ve password_hash de tranh lo thong tin nhay cam
+     * - email_verified_at la null vi user moi chua xac thuc email
      */
     public function create(string $username, string $email, string $passwordHash): array
     {
@@ -64,6 +65,41 @@ class User
             'id' => $db->lastInsertId(),  //lastInsertId() hàm của PDO
             'username' => $username,
             'email' => $email,
+            'email_verified_at' => null,
         ];
+    }
+
+    /**
+     * Danh dau user da xac thuc email.
+     *
+     * Input:
+     * - $userId: ID cua user can cap nhat
+     * - $verifiedAt: thoi diem xac thuc email
+     */
+    public function markEmailVerified(int $userId, string $verifiedAt): void
+    {
+        $db = Database::connection();
+
+        $stmt = $db->prepare('UPDATE users SET email_verified_at = ? WHERE id = ?');
+        $stmt->execute([
+            $verifiedAt,
+            $userId,
+        ]);
+    }
+
+    /**
+     * Lay danh sach user o dang public, khong tra ve password_hash.
+     */
+    public function findAllPublic(): array
+    {
+        $db = Database::connection();
+
+        $stmt = $db->query(
+            'SELECT id, username, email, email_verified_at, created_at
+             FROM users
+             ORDER BY id DESC'
+        );
+
+        return $stmt->fetchAll();
     }
 }

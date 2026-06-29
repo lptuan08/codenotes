@@ -5,6 +5,29 @@ namespace App\Helpers;
 class ResponseHelper
 {
     /**
+     * Tra ve du lieu debug de xem nhanh cac bien trong controller/service.
+     *
+     * Input:
+     * - $data: mang du lieu muon xem
+     * - $message: thong bao mo ta ngu canh debug
+     * - $statusCode: HTTP status code, mac dinh 200
+     *
+     * Output JSON:
+     * - success: true
+     * - debug: array du lieu can xem
+     */
+    public static function debug(array $data = [], string $message = 'Debug', int $statusCode = 200): void
+    {
+        http_response_code($statusCode);
+
+        echo json_encode([
+            'success' => true,
+            'message' => $message,
+            'debug' => $data,
+        ], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+    }
+
+    /**
      * Tra ve response thanh cong cho API.
      *
      * Input:

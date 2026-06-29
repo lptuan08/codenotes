@@ -1,5 +1,7 @@
 <?php
 
+use App\Middleware\JwtMiddleware;
+
 /**
  * Route definitions for the application.
  *
@@ -19,12 +21,14 @@
 
 // Register
 $router->add('POST', '/auth/register', 'AuthController@register');
+// Verify email by code
+$router->add('POST', '/auth/verify-email', 'AuthController@verifyEmail');
 //login
 $router->add('POST', '/auth/login', 'AuthController@login');
 
 
+// JwtMiddleware::class -> App\Middleware\JwtMiddleware. PHP sẽ lấy alias đã import bằng use
 
-
-$router->add('GET', '/users', 'UserController@index');
-$router->add('POST', '/users', 'UserController@store');
-$router->add('GET', '/users/(\d+)', 'UserController@show');
+$router->add('GET', '/users', 'UserController@index', ["App\\Middleware\\JwtMiddleware"]);
+$router->add('POST', '/users', 'UserController@store', [JwtMiddleware::class]);
+$router->add('GET', '/users/(\d+)', 'UserController@show', [JwtMiddleware::class]);

@@ -15,13 +15,15 @@ class Router
      * @param string $method  HTTP method (GET, POST, PUT, DELETE, ...)
      * @param string $path    Route path or regex pattern for path matching
      * @param string $handler Controller@action string
+     * @param array $middleware Middleware class names to run before the controller
      */
-    public function add(string $method, string $path, string $handler): void
+    public function add(string $method, string $path, string $handler, array $middleware = []): void
     {
         $this->routes[] = [
             'method' => $method,
             'path' => $path,
             'handler' => $handler,
+            'middleware' => $middleware,
         ];
     }
 
@@ -47,6 +49,26 @@ class Router
                 }
 
                 $controllerObject = new $controllerClass();
+
+                foreach ($route['middleware'] as $middlewareClass) {
+                    if (!class_exists($middlewareClass)) {
+                        http_response_code(500);
+                        echo json_encode(['error' => 'Middleware not found']);
+                        return;
+                    }
+
+                    $middleware = new $middlewareClass();
+
+                    if (!method_exists($middleware, 'handle')) {
+                        http_response_code(500);
+                        echo json_encode(['error' => 'Middleware handle method not found']);
+                        return;
+                    }
+
+                    if ($middleware->handle() === false) {
+                        return;
+                    }
+                }
 
                 if (!method_exists($controllerObject, $action)) {
                     http_response_code(500);
